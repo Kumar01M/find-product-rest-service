@@ -1,10 +1,14 @@
 package com.kumar.find_product.repository.implementation;
 
+import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DataAccessException;
 import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.jdbc.core.RowMapper;
+import org.springframework.lang.Nullable;
 import org.springframework.stereotype.Repository;
 
 import com.kumar.find_product.model.Category;
@@ -20,9 +24,25 @@ public class CategoryRepoImpl implements CategoryRepository {
     }
 
     @Override
-    public List<Category> getCategories(Integer shopID) throws DataAccessException {
-        // TODO Auto-generated method stub
-        throw new UnsupportedOperationException("Unimplemented method 'getCategories'");
+    public List<Category> getCategories(Integer shopID) throws DataAccessException, SQLException {
+        String selectQuery = "SELECT categoryID, shopID, categoryName, categoryTags FROM category " +
+            "WHERE shopID = ? AND deletedFlag = 'N'";
+        return jdbcTemplate.query(
+            selectQuery,
+            new RowMapper<Category>(){
+                @Override
+                @Nullable
+                public Category mapRow(ResultSet resultSet, int arg1) throws SQLException {
+                    Category category = new Category();
+                    category.setCategoryID(resultSet.getInt(1));
+                    category.setShopID(resultSet.getInt(2));
+                    category.setCategoryName(resultSet.getString(3));
+                    category.setCategoryTags(resultSet.getString(4));
+                    return category;
+                }
+            },
+            shopID
+        );
     }
 
     @Override

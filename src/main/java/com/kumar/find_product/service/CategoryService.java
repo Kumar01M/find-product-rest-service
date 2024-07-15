@@ -1,5 +1,7 @@
 package com.kumar.find_product.service;
 
+import java.util.List;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -9,7 +11,9 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
 import com.kumar.find_product.model.Category;
+import com.kumar.find_product.model.Response;
 import com.kumar.find_product.repository.CategoryRepository;
+import com.kumar.find_product.utils.ConstantMessage;
 
 import io.micrometer.common.util.StringUtils;
 
@@ -87,6 +91,31 @@ public class CategoryService {
             }
         }
         return true;
+    }
+
+    public ResponseEntity<Response<List<Category>>> getCategories(Integer shopID) {
+        logger.info("getCategories - shopID: " + shopID);
+        ResponseEntity<Response<List<Category>>> response = ResponseEntity.badRequest()
+            .body(new Response<>(ConstantMessage.INVALID_REQUEST_PARAM, null));
+        if (shopID == null) {
+            return response;
+        }
+        List<Category> categories = null;
+        try {
+            categories = categoryRepo.getCategories(shopID);
+            String message = "Categories found";
+            if (categories.isEmpty()) {
+                message = "No categories found.";
+            }
+            return ResponseEntity.ok().body(new Response<>(message, categories));
+        } catch (DataAccessException e) {
+            logger.error("message: " + e.getMessage());
+            return response;
+        } catch (Exception e) {
+            logger.error("message: " + e.getMessage());
+            return ResponseEntity.internalServerError()
+                .body(new Response<>(ConstantMessage.INTERNAL_SERVER_ERROR, null));
+        }
     }
 
 }
