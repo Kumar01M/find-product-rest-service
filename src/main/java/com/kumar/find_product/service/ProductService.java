@@ -1,5 +1,7 @@
 package com.kumar.find_product.service;
 
+import java.util.List;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -8,8 +10,12 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
+import com.kumar.find_product.dto.GetProductsDTO;
+import com.kumar.find_product.model.Category;
 import com.kumar.find_product.model.Product;
+import com.kumar.find_product.model.Response;
 import com.kumar.find_product.repository.ProductRepository;
+import com.kumar.find_product.utils.ConstantMessage;
 
 @Service
 public class ProductService {
@@ -40,7 +46,29 @@ public class ProductService {
         } catch (Exception e) {
             logger.error("message: " + e.getMessage());
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                .body(HttpStatus.INTERNAL_SERVER_ERROR.getReasonPhrase());
+            .body(HttpStatus.INTERNAL_SERVER_ERROR.getReasonPhrase());
+        }
+    }
+
+    public ResponseEntity<Response<GetProductsDTO>> getProducts(Object... argObjects) {
+        logger.info("getProducts - args: " + argObjects.toString());//not working
+        ResponseEntity<Response<GetProductsDTO>> response = ResponseEntity.badRequest()
+            .body(new Response<>(ConstantMessage.INVALID_REQUEST_PARAM, null));
+        GetProductsDTO data = null;
+        try {
+            data = productRepo.getProducts(argObjects);
+            String message = "Products found";
+            if (data.getFilteredCount() == 0) {
+                message = "No Product found.";
+            }
+            return ResponseEntity.ok().body(new Response<>(message, data));
+        } catch (DataAccessException e) {
+            logger.error("message: " + e.getMessage());
+            return response;
+        } catch (Exception e) {
+            logger.error("message: " + e.getMessage());
+            return ResponseEntity.internalServerError()
+            .body(new Response<>(ConstantMessage.INTERNAL_SERVER_ERROR, null));
         }
     }
 
